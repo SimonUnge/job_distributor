@@ -63,7 +63,7 @@
 \begin_layout Standard
 \begin_inset External
 	template PDFPages
-	filename img/Exjobbsframsida.pdf
+	filename Exjobbsframsida.pdf
 
 \end_inset
 
@@ -77,7 +77,7 @@
 \begin_layout Standard
 \begin_inset External
 	template PDFPages
-	filename img/abstract.pdf
+	filename download.pdf
 
 \end_inset
 
@@ -250,7 +250,7 @@ name "sub:Distributed-systems"
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -261,7 +261,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/strong_consistency.png
+	filename /Users/simonunge/Downloads/Untitleddrawing (3).png
 	scale 50
 
 \end_inset
@@ -302,7 +302,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/eventual_consistency.png
+	filename /Users/simonunge/Downloads/Untitleddrawing (4).png
 	scale 50
 
 \end_inset
@@ -571,7 +571,7 @@ name "sub:CouchDB"
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset listings
@@ -859,7 +859,7 @@ reference "Document creation example"
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset listings
@@ -1041,7 +1041,7 @@ name "sub:Document-Revisions."
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -1052,7 +1052,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/rev-timeline.png
+	filename /Users/simonunge/Downloads/rev-timeline.png
 	scale 38
 
 \end_inset
@@ -1090,7 +1090,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/Update_conflict.png
+	filename /Users/simonunge/Downloads/Updateconflict (1).png
 	scale 43
 
 \end_inset
@@ -1337,7 +1337,7 @@ name "sub:Changes."
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset listings
@@ -1537,7 +1537,7 @@ name "sub:Views"
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset listings
@@ -1746,7 +1746,7 @@ reference "replication"
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset listings
@@ -1821,12 +1821,12 @@ name "sub:Conflicts-and-resolution"
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/replic_conflict.png
+	filename /Users/simonunge/Downloads/Replic.Conflict (1).png
 	scale 43
 
 \end_inset
@@ -2107,12 +2107,12 @@ Diino node layout
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/NodeLayout.png
+	filename /Users/simonunge/Downloads/NodeLayout.png
 	scale 38
 	rotateOrigin center
 
@@ -2290,7 +2290,7 @@ name "sub:Job-document"
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset listings
@@ -2811,12 +2811,12 @@ name "sub:Work-manager"
 placement t
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/replication_flow.png
+	filename /Users/simonunge/Desktop/Seq/img/sequence_img001.png
 	scale 60
 	rotateOrigin center
 
@@ -3449,11 +3449,11 @@ reference "sub:Document-Revisions."
 placement th
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/Processlayout.jpg
+	filename /Users/simonunge/Downloads/Processlayout.jpg
 	scale 50
 
 \end_inset
