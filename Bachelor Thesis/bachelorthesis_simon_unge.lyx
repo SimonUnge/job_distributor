@@ -1,0 +1,4322 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize 12
+\spacing onehalf
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset External
+	template PDFPages
+	filename Exjobbsframsida.pdf
+
+\end_inset
+
+
+\begin_inset Newpage cleardoublepage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset External
+	template PDFPages
+	filename download.pdf
+
+\end_inset
+
+
+\begin_inset Newpage cleardoublepage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+A distributed system is next to useless if one does not take advantage of
+ the fact that jobs can be divided between the nodes
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+A node, in the context of this thesis, is a computational entity in the
+ distributed system
+\end_layout
+
+\end_inset
+
+ in the system.
+ One way of doing this is to have a job distributer, a tool used to distribute
+ and manage the jobs, making sure that the jobs are executed somewhere in
+ the system and make sure that each job is not executed more than once.
+ 
+\end_layout
+
+\begin_layout Standard
+In distributed system there is no shared memory
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Consistency"
+
+\end_inset
+
+.
+ The lack of a shared memory between nodes means that all communication
+ is done via message passing, so a reliable communication between the nodes
+ in the system is necessary so that the jobs can be distributed.
+ One advantage of distributed system is that if the job burden is too much
+ for the current setup, more nodes can be added to take some the burden.
+ 
+\end_layout
+
+\begin_layout Standard
+In this thesis, I want to evaluate if it is possible to build a job distributer
+ that uses CouchDB as a tool used for a reliable communication between nodes,
+ synchronization of jobs and make the job distribution easy to scale.
+\end_layout
+
+\begin_layout Subsection
+Contributions
+\end_layout
+
+\begin_layout Itemize
+Demonstrate that CouchDB can be used as a tool to distribute jobs in a network
+\end_layout
+
+\begin_layout Itemize
+That it can be scaleable 
+\end_layout
+
+\begin_layout Itemize
+Guaranteeing eventual consistency 
+\end_layout
+
+\begin_layout Itemize
+That the task is performed only once.
+\end_layout
+
+\begin_layout Section
+Background
+\end_layout
+
+\begin_layout Standard
+This part will give the necessary background information needed to grasp
+ the content of this thesis.
+ 
+\end_layout
+
+\begin_layout Standard
+Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Distributed-systems"
+
+\end_inset
+
+ describes what consistency in a distributed system means(section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Consistency"
+
+\end_inset
+
+), and one model of consistency called eventual consistency(section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Eventual-Consistency"
+
+\end_inset
+
+) as well as the CAP theorem which explains why a strong consistency is
+ not always possible(section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:CAP-Theorem"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:CouchDB"
+
+\end_inset
+
+ describes CouchDB, a database management system used as the main tool in
+ the thesis, which has one important replication feature which will be used
+ to synchronize databases, described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Replication."
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Distributed systems
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Distributed-systems"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/simonunge/Downloads/Untitleddrawing (3).png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Strong Consistency
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Strong Consistency"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/simonunge/Downloads/Untitleddrawing (4).png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Eventual Consistency
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Eventual Consistency"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Consistency Examples.
+ An update to an object x - the objects are simple one valued integers -
+ is represented by 
+\begin_inset Quotes eld
+\end_inset
+
+write(x, Value)
+\begin_inset Quotes erd
+\end_inset
+
+ where Value is the a new value written to x.
+ An access to the object x is represented by 
+\begin_inset Quotes eld
+\end_inset
+
+read(x)=ReturnValue
+\begin_inset Quotes erd
+\end_inset
+
+ where ReturnValue is the value returned when accessing the object.
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Consistencies"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Consistency
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Consistency"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A consistency model in a distributed system is a guarantee from the distributed
+ system about the relation between an update to an object and the access
+ to an updated object.
+\end_layout
+
+\begin_layout Standard
+The strictest from of consistency is called strong, or atomic, consistency
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Consistency"
+
+\end_inset
+
+.
+ Strong consistency guarantees that when an update is made to an object,
+ the update is immediately availably through out the system, and thus all
+ attempts to access the object will return the updated version.
+ 
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Strong Consistency"
+
+\end_inset
+
+ shows a simple example of strong consistency.
+ In the figure, node N1 is making an update to object x with the value 4,
+ and attempt to read object x by node N2 and N3 results in the updated value.
+\end_layout
+
+\begin_layout Standard
+In a distributed system, the lack of a global clock - each node having the
+ exact same time - makes it costly to achieve strong consistency
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Consistency"
+
+\end_inset
+
+.
+ Therefore there exists weaker models of consistency, where the system does
+ not guarantee that any subsequent access to an updated object will result
+ in the latest version.
+ There are a number of weaker consistency models.
+ Of particular interest in this thesis is the eventual consistency model.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Eventual Consistency
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Eventual-Consistency"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Eventual Consistency is a weaker form of consistency model
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Verner Eventual Consistency"
+
+\end_inset
+
+.
+ It guarantees that if no new updates are made to an object, eventually
+ the updated object will have replicated through the system to all affected
+ nodes and all access to the local copy of the object will return the latest
+ update.
+ However, due to network delays, system load and the number of replicas
+ needed, the time required for an update to become consistent may vary.
+ 
+\end_layout
+
+\begin_layout Standard
+The time between performing an update and it being available on all nodes
+ is called the inconsistency window
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Verner Eventual Consistency"
+
+\end_inset
+
+.
+ During the inconsistency window replicas can be inconsistent and an attempt
+ by a node to access the local copy of the object may not return the latest
+ version of the object, with the consequence that accesses on two nodes
+ can get two different results.
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Eventual Consistency"
+
+\end_inset
+
+ shows an example of an update made on an object in a distributed system
+ that guarantees eventual consistency.
+ In the figure, there are three nodes that replicate each other.
+ Initially, x has the value 0.
+ Node N1 is updating x with the value 4.
+ Node N2 reads the value 4 from x, which is the latest value.
+ Node N3 reads the value 0 from x, which is an old value of x.
+ Subsequently N3 makes another read of x, this time the latest value, 4,
+ is returned.
+\end_layout
+
+\begin_layout Subsubsection
+CAP Theorem
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:CAP-Theorem"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+According to the CAP Theorem
+\begin_inset CommandInset citation
+LatexCommand cite
+key "CAP"
+
+\end_inset
+
+, it is impossible for a distributed system to uphold the following three
+ properties at the same time:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula $ $
+\end_inset
+
+Consistency.
+ Strong, or atomic consistency, described in section 2.1.1
+\end_layout
+
+\begin_layout Itemize
+Availability - Every request received by a non failing node must be result
+ in a response (although not necessarily immediately).
+\end_layout
+
+\begin_layout Itemize
+Partition tolerance - To be able to split the database over several servers.
+\end_layout
+
+\begin_layout Standard
+It can however, uphold two of them.
+ In the case of the thesis problem, high availability as well as partition
+ tolerance is of priority.
+ According to the CAP theorem, this will be at the cost of strong consistency.
+\end_layout
+
+\begin_layout Subsection
+CouchDB
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:CouchDB"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\scriptsize}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+	"_id" : "2737419288317x134agu771h98",
+\end_layout
+
+\begin_layout Plain Layout
+
+	"_rev" : "3-ff2e79d0625ee249bet2003o98",
+\end_layout
+
+\begin_layout Plain Layout
+
+	"Name" : "John Doe",
+\end_layout
+
+\begin_layout Plain Layout
+
+	"Occupation" : "Programmer",
+\end_layout
+
+\begin_layout Plain Layout
+
+	"Interests" : ["Climbing", "Walking", "Crawling"]
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+CouchDB Document
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Example of couchDB document"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The main tool used in this thesis is CouchDB, a document based database
+ server implemented in Erlang.
+ In a document based database, data is represented by a collection of documents,
+ each of which can contain several fields and values
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Apress-couchDB"
+
+\end_inset
+
+.
+ The documents are self-contained, meaning that there are no relation between
+ any two documents - they are independent from each other - and unlike SQL
+ databases there is no strict schema to follow when creating or altering
+ a document.
+ Intuitively a document can be thought of as a business card.
+ Two different business cards can have totally different content, one representi
+ng a person, containing fields like 
+\begin_inset Quotes eld
+\end_inset
+
+Name: John Doe
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+Occupation: Drug dealer
+\begin_inset Quotes erd
+\end_inset
+
+ and one representing a company, containing fields like 
+\begin_inset Quotes eld
+\end_inset
+
+Company name: Foo AB
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+Motto: We love our customers
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Both are business cards, but with no other relationship or common content
+ other than being business cards.
+\end_layout
+
+\begin_layout Standard
+In CouchDB the documents are JSON objects
+\begin_inset CommandInset citation
+LatexCommand cite
+key "JSON-RFC"
+
+\end_inset
+
+ that consists of field/value pairs.
+ Field values can be strings, numbers, or lists containing datatypes, or
+ even nested JSON objects.
+ Each document must have a identity field, 
+\begin_inset Quotes eld
+\end_inset
+
+_id
+\begin_inset Quotes erd
+\end_inset
+
+, which is unique inside the database and a revision field, 
+\begin_inset Quotes eld
+\end_inset
+
+_rev
+\begin_inset Quotes erd
+\end_inset
+
+, which is maintained by CouchDB, and is used for conflict handling and
+ revision control (see also section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Document-Revisions."
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Example of couchDB document"
+
+\end_inset
+
+ shows an example CouchDB document.
+ In the example, the document has five fields.
+ The fields 
+\begin_inset Quotes eld
+\end_inset
+
+Name
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+Occupation
+\begin_inset Quotes erd
+\end_inset
+
+ have strings as values, and the field 
+\begin_inset Quotes eld
+\end_inset
+
+Interests
+\begin_inset Quotes erd
+\end_inset
+
+ has a list of strings as its value, [
+\begin_inset Quotes eld
+\end_inset
+
+Climbing
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+Walking
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+Crawling
+\begin_inset Quotes erd
+\end_inset
+
+].
+\end_layout
+
+\begin_layout Standard
+CouchDB is an HTTP server.
+ Each CouchDB server can host several databases, and each database can store
+ many documents.
+ The server is accessible though a RESTful
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Representational State Transfer
+\begin_inset CommandInset citation
+LatexCommand cite
+key "RESTful"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ JSON API.
+ To access documents residing in a database, the client issues HTTP requests,
+ such as 'GET', 'PUT', 'PUSH' and 'DELETE' to a URI
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Unified Resource Identifier
+\begin_inset CommandInset citation
+LatexCommand cite
+key "URI"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ along with additional JSON data in the request body.
+ The server processes the request and responds accordingly, with a JSON
+ object or error message.
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Document creation example"
+
+\end_inset
+
+ shows how to create a database, add a document to it, request the document,
+ and then delete the document.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\scriptsize}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+First create a database called 'fruits':
+\end_layout
+
+\begin_layout Plain Layout
+
+$ curl -X PUT http://127.0.0.1:5001/fruits
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+CouchDB confirms the creation with a JSON object:
+\end_layout
+
+\begin_layout Plain Layout
+
+{"ok":true}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+Then add a document to the database 'fruits', in this case data about
+\end_layout
+
+\begin_layout Plain Layout
+
+a fruit and its characteristics to the newly created 'fruits' database,
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+a JSON object is passed as data:
+\end_layout
+
+\begin_layout Plain Layout
+
+$ curl -X PUT http://127.0.0.1:5001/fruits/banana -d '{"colour": "yellow"}'
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+CouchDB respond with a confirmation and the id and revision of the document.
+\end_layout
+
+\begin_layout Plain Layout
+
+The document banana resides on address 'http:127.0.0.1:5001/fruits/banana':
+\end_layout
+
+\begin_layout Plain Layout
+
+{"ok":true, "id":""banana, "rev":"1-oeff2t43d998o770ou"}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+To retrieve the document just created, use a GET request to the address
+ of
+\end_layout
+
+\begin_layout Plain Layout
+
+the document:
+\end_layout
+
+\begin_layout Plain Layout
+
+$ curl -X GET http://127.0.0.1:5001/fruits/banana
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+CouchDB response with the JSON representation of the document:
+\end_layout
+
+\begin_layout Plain Layout
+
+{"_id":"banana", "_rev":"1-oeff2t43d998o770ou", "colour":"yellow"}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+And finally delete the document.
+ For this we need the id and rev of the 
+\end_layout
+
+\begin_layout Plain Layout
+
+document:
+\end_layout
+
+\begin_layout Plain Layout
+
+$ curl -X DELETE http://127.0.0.1:5001/fruits/banana?rev=1-oeff2t43d998o770ou
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Document creation.
+ In the example, an instance of CouchDB is assumed to be running and is
+ located on 'http://127.0.0.1:5001'.
+ The communication is done via a command-line utility called 'curl'
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Curl"
+
+\end_inset
+
+ which lets you issue HTTP requests via the terminal.
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Document creation example"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Document Revisions.
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Document-Revisions."
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/simonunge/Downloads/rev-timeline.png
+	scale 38
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+CouchDB Revision Timeline.
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Rev timeline"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/simonunge/Downloads/Updateconflict (1).png
+	scale 43
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Update Conflict
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "Update Conflict"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Revision examples.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+CouchDB uses Multi-Version Concurrency Control(MVCC) to manage access to
+ the documents
+\begin_inset CommandInset citation
+LatexCommand cite
+key "CouchDB-Book"
+
+\end_inset
+
+.
+ MVCC is a method that provides non-blocking read access to a database
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Source?
+\end_layout
+
+\end_inset
+
+.
+ The idea is to let the clients get a snapshot of the database, instead
+ of working directly on the database.
+ The data is versioned and a read request will return the latest current
+ version of the data.
+ An update to data does not overwrite the current data, but instead adds
+ newer version of the data, while the old version is kept unchanged.
+ This way there is always a consistent, latest version of the data, and
+ there is no need to block read operations to make sure there is not a write
+ in progress, and no need for a write operation to wait for a read to be
+ ready since the write will always create a new revision.
+ When the write operation has completed, the new data will be seen as the
+ latest version.
+\end_layout
+
+\begin_layout Standard
+CouchDB implements MVCC by giving each document a revision field that is
+ maintained by CouchDB.
+ The revision value is on the form 
+\begin_inset Quotes eld
+\end_inset
+
+N-xxxxxxxxx
+\begin_inset Quotes erd
+\end_inset
+
+ where the N is an integer denoting the number of times a document has been
+ updated, and the x's is a MD5 hash made from the contents of the document
+ JSON data.
+ As explained above, when updating a document, CouchDB does not overwrite
+ the document, but instead makes a new version of the document, with a new
+ revision value, with N incremented by one, and archiving, keeping it as
+ an older revision of the document, the old version.
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Rev timeline"
+
+\end_inset
+
+ shows how CouchDB works in a non-locking manner.
+ In the figure, three read-operations to document 'x' are issued.
+ The first two reads results in the same version of the document, i.e the
+ same revision-value.
+ The third read is performed after an update to the document, and the returned
+ document thus has a new revision-value.
+\end_layout
+
+\begin_layout Standard
+The revision field is also used to detect update conflicts.
+ When a client wants to update a document, the revision-value of the document
+ needs to be included in the request to CouchDB to check if the client was
+ working on the latest version of the document.
+ If two users are trying to make an update to the same revision, say 
+\begin_inset Quotes eld
+\end_inset
+
+1-abc
+\begin_inset Quotes erd
+\end_inset
+
+, CouchDB will only accept one of the updates, the one that CouchDB gets
+ first, and increase the revision-value of the document to 
+\begin_inset Quotes eld
+\end_inset
+
+2-cda
+\begin_inset Quotes erd
+\end_inset
+
+.
+ When the second user tries to commit its update, still including the old
+ revision-value 
+\begin_inset Quotes eld
+\end_inset
+
+1-abc
+\begin_inset Quotes erd
+\end_inset
+
+, CouchDB will reject the update, since the user is probably overwriting
+ data the user did not know existed.
+ 
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Make this part better!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Update Conflict"
+
+\end_inset
+
+ illustrates an update conflict.
+ In the figure, two clients request the same document, 
+\begin_inset Formula $x$
+\end_inset
+
+.
+ Then they both makes changes to the document, resulting in two new versions
+ of the document, 
+\begin_inset Formula $x_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $x_{1}$
+\end_inset
+
+
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+X_0 and X_1
+\end_layout
+
+\end_inset
+
+.
+ Client 1 writes its 
+\begin_inset Formula $x_{0}$
+\end_inset
+
+ to the database first, making it the latest revision of the document in
+ the database.
+ Then client 2 writes its update 
+\begin_inset Formula $x_{1}$
+\end_inset
+
+ to the database, the update is rejected since there is a newer version
+ of 
+\begin_inset Formula $x$
+\end_inset
+
+ in the database.
+\end_layout
+
+\begin_layout Standard
+CouchDB also uses the revision number when detecting conflict in replication
+ between databases, as described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Conflicts-and-resolution"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection
+Changes.
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Changes."
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\scriptsize}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+To request continiuous changes from a database:
+\end_layout
+
+\begin_layout Plain Layout
+
+$ curl -X GET http://127.0.0.1:5001/fruits/_changes?feed=continuous
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+Example of change object.
+\end_layout
+
+\begin_layout Plain Layout
+
+{"seq":3, "id":"banana", "changes":[{"rev":"1-oeff2t43d998o770ou"}]}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+CouchDB Changes
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Changes"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Clients may need to view the revision timeline.
+ For this purpose, CouchDB comes equipped with a 'changes'-API
+\begin_inset CommandInset citation
+LatexCommand cite
+key "CouchDB-Book"
+
+\end_inset
+
+.
+ A 'change' is a JSON object containing information about a when document
+ was updated.
+ It contains three fields: 
+\begin_inset Quotes eld
+\end_inset
+
+seq
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+id
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+changes
+\begin_inset Quotes erd
+\end_inset
+
+.
+ The 
+\begin_inset Quotes eld
+\end_inset
+
+seq
+\begin_inset Quotes erd
+\end_inset
+
+ value is an integer which represents an update sequence number of the change
+ made to the database.
+ The update sequence number is a integer value stored internally by CouchDB
+ which is incremented each time a change is made to the database.
+ The 
+\begin_inset Quotes eld
+\end_inset
+
+id
+\begin_inset Quotes erd
+\end_inset
+
+ value is the document id that was altered and the 
+\begin_inset Quotes eld
+\end_inset
+
+changes
+\begin_inset Quotes erd
+\end_inset
+
+ value is list containing the documents revision value and possible additional
+ information about the document such as if the document has been deleted.
+\end_layout
+
+\begin_layout Standard
+Changes can be polled by the client or they can be given to the client in
+ a continuous stream.
+ When polling for changes to a database, CouchDB will return list of changes-obj
+ects, one for each document in the database that has been changed since
+ a given update sequence number, along with a 
+\begin_inset Quotes eld
+\end_inset
+
+last_seq
+\begin_inset Quotes erd
+\end_inset
+
+ number, indicating the last update sequence number.
+ The purpose of the sequence number is for a client to be able to ask 
+\begin_inset Quotes eld
+\end_inset
+
+What changes has been made to the database since sequence number X?
+\begin_inset Quotes erd
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+When a continuous stream is used, an HTTP connection between the client
+ and CouchDB is opened 
+\begin_inset Quotes eld
+\end_inset
+
+forever
+\begin_inset Quotes erd
+\end_inset
+
+(until closed by the client or due to network failure).
+ Whenever a change is made to the database, the client gets a notification
+ in the form of a changes-object.
+ 
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Changes"
+
+\end_inset
+
+ shows examples of how the changes-API is used and what a change object
+ looks like.
+\end_layout
+
+\begin_layout Subsubsection
+Views.
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Views"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\footnotesize}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+function(doc) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(doc.colour == "yellow") {
+\end_layout
+
+\begin_layout Plain Layout
+
+    	emit(doc._id, null);
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+View function
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "View function"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+CouchDB uses map and reduce functions, combined called 'views', to implement
+ queries.
+ These views are Javascript functions defined and stored in documents called
+ design documents.
+ Map functions are functions that take each document in the database as
+ the argument, and either ignores the document, or emits one or more view
+ rows as key/value pairs.
+ 
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "View function"
+
+\end_inset
+
+ shows a that function would emit all documents in the database which are
+ yellow fruits, with the document id as the key and 
+\begin_inset Quotes eld
+\end_inset
+
+null
+\begin_inset Quotes erd
+\end_inset
+
+ as value.
+\end_layout
+
+\begin_layout Subsubsection
+Replication.
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Replication."
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+One important feature of CouchDB is replication.
+ Replication is the process of synchronizing two copies of the same database,
+ either within an CouchDB server, or between two different CouchDB servers
+\begin_inset CommandInset citation
+LatexCommand cite
+key "CouchDB-Book"
+
+\end_inset
+
+.
+ A replication is uni-directional, having a source and a target database.
+ When a replication is triggered, explained in more detail below, CouchDB
+ will compare the source and target databases to find out which documents
+ from source differ from which documents on target, and transfer the documents
+ that differ.
+ The documents that differ could either be new documents that do not exist
+ on the target database, or newer versions of documents(See section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Document-Revisions."
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+A replication can be either triggered or continuous.
+ A triggered replication replicates
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+omformulera?
+\end_layout
+
+\end_inset
+
+ all changes made to the source database since the last replication,
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+kanske ta upp internal update sequence number?
+\end_layout
+
+\end_inset
+
+ while continuous replication periodically replicates changes made on the
+ source database to the target database (CouchDB has a complex algorithm
+ to determine when to replicate during continuous replication
+\begin_inset CommandInset citation
+LatexCommand cite
+key "CouchDB-Book"
+
+\end_inset
+
+, the details of the algorithm are beyond the scope of this thesis).
+\end_layout
+
+\begin_layout Standard
+It is with this replication system that CouchDB achieves eventual consistency
+ between databases.
+\end_layout
+
+\begin_layout Standard
+A replication can be made bi-directional be creating two replications, one
+ from database X to database Y and one from Y to X.
+ The replication can either be 
+\begin_inset Quotes eld
+\end_inset
+
+pushed
+\begin_inset Quotes erd
+\end_inset
+
+, where the source database is located on the server which gets the replication
+ request, or 
+\begin_inset Quotes eld
+\end_inset
+
+pulled
+\begin_inset Quotes erd
+\end_inset
+
+, where the target database is located on the server which gets the replication
+ request.
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "replication"
+
+\end_inset
+
+ shows examples of how to set up replications between databases.
+ A JSON object containing information about source and target is passed
+ as additional data to the server.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\footnotesize}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+To trigger a replication between two databases on the 
+\end_layout
+
+\begin_layout Plain Layout
+
+same CouchDB server:
+\end_layout
+
+\begin_layout Plain Layout
+
+$ curl -X GET http://127.0.0.1:5001/_replicate -d 
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+ '{"source":"database", "target":"database-replica"}'
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Replication
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "replication"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Conflicts and resolution between databases.
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Conflicts-and-resolution"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/simonunge/Downloads/Replic.Conflict (1).png
+	scale 43
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Replication Conflict.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "Rep.Conf"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When databases replicate each other (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Replication."
+
+\end_inset
+
+), conflicts may arise.
+ This happens when CouchDB notices that the latest source and target version
+ of a document X have different revisions(see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Document-Revisions."
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Rep.Conf"
+
+\end_inset
+
+ shows how a conflict can arise during replication.
+ In the figure, database A contains one document, x, with revision value
+ 
+\begin_inset Quotes eld
+\end_inset
+
+1-abc
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Database A triggers a replication with Database A as source and Database
+ B as target, transferring document x.
+ Database A and B updates document x, resulting in new revisions of x, 
+\begin_inset Quotes eld
+\end_inset
+
+2-cda
+\begin_inset Quotes erd
+\end_inset
+
+ on database A and 
+\begin_inset Quotes eld
+\end_inset
+
+2-def
+\begin_inset Quotes erd
+\end_inset
+
+ on database B.
+ Database A triggers a second replication, transferring the new revision
+ of document x.
+ Database B detects a conflict between the replicated revision of x and
+ the local revision of x.
+\end_layout
+
+\begin_layout Standard
+CouchDB does not resolve conflicts, but chooses one of the versions as the
+ latest version.
+ When CouchDB discovers a conflict, it marks the document with a conflict
+ flag, and then decides which version is the winning one, saves the winning
+ version as the latest revision, and the losing version as the previous
+ revision.
+ The algorithm to decide the winning version is deterministic
+\begin_inset CommandInset citation
+LatexCommand cite
+key "CouchDB-Book"
+
+\end_inset
+
+: each revision comes with a revision history list, where all previous revisions
+ values of the document are stored, and the revision with the longest revision
+ history list becomes the winner.
+ If both revisions have equally long history lists, the _rev fields of the
+ conflicting documents are compared, and the one with the highest ASCII
+ sort order becomes the winning version.
+ The deterministic decision ensures different CouchDB servers will come
+ to the same decision given the same data.
+\end_layout
+
+\begin_layout Section
+Problem Description
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Problem-Description"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The goal of this thesis is to evaluate the possibility to use CouchDB, and
+ its replication functionality, as a mean to distribute jobs in a distributed
+ system in a fault tolerant and consistent manner.
+ The thought of distributed system will consist of several nodes located
+ of different geographical parts of the world.
+\end_layout
+
+\begin_layout Subsection
+Nodes
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Nodes"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The distributed system will consist of several nodes.
+ On each node, a CouchDB server will be running.
+ The database server will contain a database which purpose is to distribute
+ jobs (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Jobs"
+
+\end_inset
+
+) in the system.
+ The database needs to be replicated bi-directionally (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Replication."
+
+\end_inset
+
+) with one or several of the CouchDB servers in the system, so that they
+ are strongly connected, in order to distribute and synchronize jobs (see
+ section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Synchronization-of-jobs"
+
+\end_inset
+
+).
+ 
+\end_layout
+
+\begin_layout Subsection
+jobs
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Jobs"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A job is something that the system needs to execute.
+ Each job contains one or several discrete job steps.
+ A job step will contain a Unix shell command for the system to perform.
+ A job step could be specified to be executed on a certain node, or set
+ of nodes, or it can be specified to be executed on any available node.
+\end_layout
+
+\begin_layout Standard
+Each job step must be executed in strict order - step 1 is followed by step
+ 2 etc - and a step must finish successfully before the next step can be
+ executed.
+ Each step must be executed once, and only once.
+\end_layout
+
+\begin_layout Standard
+A job step can either fail or succeed.
+ If a job step fails, the exit status must be caught and alternative actions
+ should be able to execute instead.
+ If the job step succeeds, the next job step is allowed to be executed.
+\end_layout
+
+\begin_layout Subsubsection
+Synchronization of jobs
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Synchronization-of-jobs"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As mentioned in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Jobs"
+
+\end_inset
+
+, a job contains job steps.
+ To guarantee that the steps are executed in order, and only executed once,
+ the nodes needs to synchronize their databases with each other and somehow
+ ensure that only one nodes executes a job step, and that they are executed
+ in the right order.
+ 
+\end_layout
+
+\begin_layout Subsection
+Diino Case study
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Case-study"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where could a system like this be useful? The idea behind this thesis was
+ created at Diino AB, a company who gives a service handling backup of data
+ towards companies and individuals.
+\end_layout
+
+\begin_layout Standard
+The users of Diinos services are spread out in the world.
+ To give the users a faster service, Diino has nodes in different geographical
+ locations, so that the distance between a user and a node is as short as
+ possible.
+ Diino has jobs that needs to be executed on one or more of the nodes.
+ Some of the jobs will have steps that needs to be executed on different
+ nodes.
+\end_layout
+
+\begin_layout Subsubsection
+Diino node layout
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/simonunge/Downloads/NodeLayout.png
+	scale 38
+	rotateOrigin center
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Exampel of Diino node layout
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Diino node layout"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Diino has two kinds of nodes, a Global node and Regional Node.
+ The Global node, of which there is only one, is the main node in the system.
+ It is on the Global node that most of the jobs (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Jobs"
+
+\end_inset
+
+) that the system needs to perform will be created.
+ It is be possible, however, for jobs to be created on the regional nodes.
+ Jobs are created on the global node according to the scheme described in
+ this thesis.
+ After a job is created, the job is propagated through the system to the
+ regional node(s), so the Global node will need to synchronize with every
+ Regional node for each job.
+ 
+\end_layout
+
+\begin_layout Standard
+There may be several regional nodes, installed in different geographical
+ locations.
+ 
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Diino node layout"
+
+\end_inset
+
+ shows a possible synchronization layout between Diino nodes.
+ In the figure, there is one Global node and three Regional nodes.
+ The arrows between the nodes denote bi-directional synchronization.
+\end_layout
+
+\begin_layout Subsubsection
+Diino specific job
+\end_layout
+
+\begin_layout Standard
+\begin_inset Quotes eld
+\end_inset
+
+Create User
+\begin_inset Quotes erd
+\end_inset
+
+ is a Diino specified job that exemplifies the use of parts of the requirements
+ of jobs described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Jobs"
+
+\end_inset
+
+.
+ The 
+\begin_inset Quotes eld
+\end_inset
+
+Create User
+\begin_inset Quotes erd
+\end_inset
+
+ job is a job with three steps with specific targets on each step.
+ 
+\end_layout
+
+\begin_layout Standard
+The first step is to be executed on the global node.
+ In this step the information about the user (username, password etc) is
+ collected and then sent to a regional node, where the information will
+ reside.
+ 
+\end_layout
+
+\begin_layout Standard
+The second step is executed on a specific regional node.
+ The information sent from the global node is stored on the regional node.
+ 
+\end_layout
+
+\begin_layout Standard
+The third step is executed on the global node, where the job is confirmed
+ to be finished.
+ This type of job shows the use of the option to specify a target for each
+ step.
+\end_layout
+
+\begin_layout Section
+Design
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Design"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this section, I describe how I, with assistants of Diino, have designed
+ a job distributor which hopefully fulfills the requirements stated in section
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Problem-Description"
+
+\end_inset
+
+.
+ The the design is divided into two parts.The first part, 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Job-document"
+
+\end_inset
+
+, describes how the job document is designed, and the second part, 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:The-different-processes/The"
+
+\end_inset
+
+, describes the different parts of the job distributer which uses the job
+ document to execute the job.
+\end_layout
+
+\begin_layout Subsection
+The Job document
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Job-document"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+lstparams "basicstyle={\scriptsize},tabsize=2"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+   "_id": "a9f92b386d2258109a5ee57b191e728c",
+\end_layout
+
+\begin_layout Plain Layout
+
+   "_rev": "8-391e15a84e5d1d2eace2a1d1dd3727bd",
+\end_layout
+
+\begin_layout Plain Layout
+
+   "creator": "global_node",
+\end_layout
+
+\begin_layout Plain Layout
+
+   "step": 1, 
+\end_layout
+
+\begin_layout Plain Layout
+
+   "job": [ 
+\end_layout
+
+\begin_layout Plain Layout
+
+       {          
+\end_layout
+
+\begin_layout Plain Layout
+
+           "target": "reg_a",
+\end_layout
+
+\begin_layout Plain Layout
+
+           "do": "sleep 5",
+\end_layout
+
+\begin_layout Plain Layout
+
+           "alt_do": null, 
+\end_layout
+
+\begin_layout Plain Layout
+
+           "claimed_by": "reg_a",
+\end_layout
+
+\begin_layout Plain Layout
+
+           "winner": "reg_a", 
+\end_layout
+
+\begin_layout Plain Layout
+
+           "executioner": "Node: reg_a, worker: <0.64.0>", 
+\end_layout
+
+\begin_layout Plain Layout
+
+           "step_status": "Finished",
+\end_layout
+
+\begin_layout Plain Layout
+
+           "exec_time": 5.006715,
+\end_layout
+
+\begin_layout Plain Layout
+
+           "start_time": "14:45:4",
+\end_layout
+
+\begin_layout Plain Layout
+
+           "finish_time": "14:45:9",
+\end_layout
+
+\begin_layout Plain Layout
+
+           "retry_strategy": {
+\end_layout
+
+\begin_layout Plain Layout
+
+               "max_retries": 3,
+\end_layout
+
+\begin_layout Plain Layout
+
+               "sleep": null,  
+\end_layout
+
+\begin_layout Plain Layout
+
+               "sleep_factor": 2,
+\end_layout
+
+\begin_layout Plain Layout
+
+               "sleep_max": 10
+\end_layout
+
+\begin_layout Plain Layout
+
+           }        
+\end_layout
+
+\begin_layout Plain Layout
+
+       },       
+\end_layout
+
+\begin_layout Plain Layout
+
+       {            
+\end_layout
+
+\begin_layout Plain Layout
+
+           "target": "any",
+\end_layout
+
+\begin_layout Plain Layout
+
+           "do": "sleep 5",        
+\end_layout
+
+\begin_layout Plain Layout
+
+           "alt_do": null,     
+\end_layout
+
+\begin_layout Plain Layout
+
+           "claimed_by": "reg_b", 
+\end_layout
+
+\begin_layout Plain Layout
+
+           "winner": null,      
+\end_layout
+
+\begin_layout Plain Layout
+
+           "executioner": null,   
+\end_layout
+
+\begin_layout Plain Layout
+
+           "step_status": null,     
+\end_layout
+
+\begin_layout Plain Layout
+
+           "exec_time": null,      
+\end_layout
+
+\begin_layout Plain Layout
+
+           "start_time": null, 
+\end_layout
+
+\begin_layout Plain Layout
+
+           "finish_time": null, 
+\end_layout
+
+\begin_layout Plain Layout
+
+           "retry_strategy": {     
+\end_layout
+
+\begin_layout Plain Layout
+
+               "max_retries": 3,    
+\end_layout
+
+\begin_layout Plain Layout
+
+               "max_time": null, 
+\end_layout
+
+\begin_layout Plain Layout
+
+               "sleep": null,
+\end_layout
+
+\begin_layout Plain Layout
+
+               "sleep_factor": 2, 
+\end_layout
+
+\begin_layout Plain Layout
+
+               "sleep_max": 10  
+\end_layout
+
+\begin_layout Plain Layout
+
+           }       
+\end_layout
+
+\begin_layout Plain Layout
+
+       }    
+\end_layout
+
+\begin_layout Plain Layout
+
+   ],    
+\end_layout
+
+\begin_layout Plain Layout
+
+   "job_status": null 
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Job document
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Job document."
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The job document will be a single CouchDB document, and will contain all
+ information about the job.
+ By this I mean that the job document will be the only source of information
+ about the job; the current state of the job; which step that is executing;
+ which node that will execute the step, and which worker that will do the
+ work; if the step executed correctly or if it did not.
+ The contents of the document is explained in detail in this section.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Job document fields
+\end_layout
+
+\begin_layout Description
+_id: This is a the unique identifier of the job.
+\end_layout
+
+\begin_layout Description
+_rev: The current revision.
+\end_layout
+
+\begin_layout Description
+creator: The node id on which the job was created.
+\end_layout
+
+\begin_layout Description
+step: The index of the current job step, starting from 0, used to track
+ the current step in the job array to guarantee the steps are performed
+ in strict order.
+ 
+\end_layout
+
+\begin_layout Description
+job: An array, or list, of all the steps the job contains.
+ Each step contains several fields of its own.
+\end_layout
+
+\begin_layout Description
+job_status: This is the finish status of the job.
+ It can be 
+\begin_inset Quotes eld
+\end_inset
+
+null
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+failed
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+success
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Paragraph
+Job step fields
+\end_layout
+
+\begin_layout Description
+target: The target on which the step should be executed.
+ This could be a specific node, a set of nodes or, or all nodes.
+\end_layout
+
+\begin_layout Description
+do: The command that should be executed.
+ In this thesis, the commands are limited to unix shell commands, but could
+ in theory be anything.
+ For example RESTful commands.
+\end_layout
+
+\begin_layout Description
+alt_Do: The command to execute if the Do-command fails, if any.
+ 
+\end_layout
+
+\begin_layout Description
+claimed_by: The node identifier of the node that attempts to claim the job
+ step
+\end_layout
+
+\begin_layout Description
+winner: The node identifier of the node that is the winner of the claim,
+ and thus the node that will execute the step
+\end_layout
+
+\begin_layout Description
+executioner: The node identifier and process identifier of the step
+\end_layout
+
+\begin_layout Description
+step_status: The current status of the step.
+ The status is the state of the step, and could for example be 
+\begin_inset Quotes eld
+\end_inset
+
+running
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+finished
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+failed
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+exec_time: The time in seconds it took to execute the step.
+\end_layout
+
+\begin_layout Description
+start_time: The time stamp of when the node started executing the step.
+ The time stamp is the local time of the node.
+\end_layout
+
+\begin_layout Description
+finish_time: The time stamp of when the node is finished executing the step.
+ The time stamp is the local time of the node.
+\end_layout
+
+\begin_layout Description
+retry_strategy: The retry strategies for the step.
+ This field contains the following several fields of its own.
+\end_layout
+
+\begin_layout Paragraph
+Retry strategy fields
+\end_layout
+
+\begin_layout Description
+max_retries: The number of retries that should be performed if the do-command
+ fails.
+\end_layout
+
+\begin_layout Description
+sleep: An integer of seconds between each retry.
+ The sleep time is either fixed, or increases between each retry.
+ The increase size is determined by the sleep_factor field.
+\end_layout
+
+\begin_layout Description
+sleep_factor: An integer to multiply the sleep field with on each retry.
+\end_layout
+
+\begin_layout Description
+sleep_max: The maximum allowed seconds between each retry.
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Job document."
+
+\end_inset
+
+ shows an example of a CouchDB representation of a job document used in
+ the thesis.
+\end_layout
+
+\begin_layout Subsection
+The Job Distributer
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:The-different-processes/The"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Listener
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Listener"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Each instance of CouchDB has a 
+\begin_inset Quotes eld
+\end_inset
+
+Listener
+\begin_inset Quotes erd
+\end_inset
+
+.
+ The Listener is a process which role is to set up a continuous changes
+ feed(see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Changes."
+
+\end_inset
+
+) to a CouchDB database, and handle the changes information it receives
+ from CouchDB.
+ Upon receiving a change on a document, the listener sends the change informatio
+n to a work manager (See section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Work-manager"
+
+\end_inset
+
+), and then waits for the next change to arrive.
+ The contents of the message is the document id of the document that has
+ been changed, and on which database the document resides.
+\end_layout
+
+\begin_layout Subsubsection
+Work manager
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Work-manager"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement t
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename /Users/simonunge/Desktop/Seq/img/sequence_img001.png
+	scale 60
+	rotateOrigin center
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Update flow.
+ The filled in arrow lines represent a save of a document.
+ The dotted arrow lines represents a replication of the document.
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Update flow"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The work manager is the core process of the system.
+ The work manager is a process which receives messages from the listener
+ and the workers, and makes, most, of the decisions (the workers will also,
+ to some extent, make decisions regarding retry strategies, as explained
+ in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Workers"
+
+\end_inset
+
+) based on the messages that it receives.
+\end_layout
+
+\begin_layout Standard
+The work manager receive messages from the listener.
+ These messages contains the id of the affected document, and information
+ about the database on which the document resides.
+ The database name works as the node identifier.
+\end_layout
+
+\begin_layout Standard
+Upon receiving a message from from the listener, the work manager retrieves
+ a copy of the affected document from the database, and goes through its
+ content.
+ Based on the content of the document (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Job-document"
+
+\end_inset
+
+), the work manager takes different actions.
+ 
+\end_layout
+
+\begin_layout Standard
+First of all, the work manager checks whether or not the job still has steps
+ that has not been executed.
+ Then if the node it is affected by the current job step.
+ This is done by examine the 
+\begin_inset Quotes eld
+\end_inset
+
+target
+\begin_inset Quotes erd
+\end_inset
+
+ value of the current job step.
+ The node can be affected in two ways; either directly by being the specific
+ target of the job step, or indirectly by being part of a subset of nodes
+ that can handle the step.
+ 
+\end_layout
+
+\begin_layout Standard
+If the node is the target, the work manager gives the job step to one of
+ the workers, if there are free workers (described below), and update the
+ document with the current status of the job, incrementing the 
+\begin_inset Quotes eld
+\end_inset
+
+step
+\begin_inset Quotes erd
+\end_inset
+
+ value with one, and save it to the local database.
+ Each time a document is changed, or updated, in any way, it is saved to
+ the database so any observer can follow the work flow of the job.
+ If there are no free workers, the work manager will ignore the document,
+ and await the next change.
+\end_layout
+
+\begin_layout Standard
+If the node is part of the subset of targets, the work manager will try
+ to claim the job.
+ The work manager claims the job by updating the 
+\begin_inset Quotes eld
+\end_inset
+
+claimed_by
+\begin_inset Quotes erd
+\end_inset
+
+ value of the current step, if no other node has already claimed the step.
+ Before making a claim, the work manager will reserve a worker for the step.
+ If there are no free workers, the work manager will not try to claim the
+ step.
+ After a claim is made, the work manager will save the document on the database,
+ and wait for a decision.
+\end_layout
+
+\begin_layout Standard
+Each job will have a creator.
+ The creator is simply the node on which the job was created.
+ It is the creator of a job who decides which node that will execute a claimed
+ step.
+ The work manager on the creator node does this by examine the 
+\begin_inset Quotes eld
+\end_inset
+
+claimed_by
+\begin_inset Quotes erd
+\end_inset
+
+ value of a document, and simply set the claimer as the winner, and saves
+ the document to the local database.
+ Although it is possible that several nodes tried to claim the job step,
+ the creator node will only see one of these claims, thanks to CouchDB replicati
+on conflict management (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Conflicts-and-resolution"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+When a node sees that it is the winner of a step, it will give the job step
+ to the reserved worker, and updating the document with the current status
+ of the job, incrementing the 
+\begin_inset Quotes eld
+\end_inset
+
+step
+\begin_inset Quotes erd
+\end_inset
+
+ value with one, and save it to the local database.
+\end_layout
+
+\begin_layout Standard
+Each work manager has a fixed number of workers under its deposal.
+ As explained above, the work manager needs to know the state of the workers
+ to be able to give job steps to free or reserved workers.
+ The work manager is always able to get information about the current state
+ of its workers.
+ The workers can be one of the following states: free, booked, busy.
+ 
+\end_layout
+
+\begin_layout Standard
+When the work manager claims a step, it changes the state of one of its
+ free workers to booked, and when the work manager gives a job step to a
+ worker, the state is changed to busy.
+ If the node did not win a claim, the reserved(booked) worker for the claim
+ is freed.
+ When a worker is done with a step, the work manger frees the worker, handles
+ the result of the step, and updates the document to the local database.
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Update flow"
+
+\end_inset
+
+ illustrates the flow of a job documents updates in the system.
+ In the figure, the job is created in node A and replicated to node B.
+ Node B claims the job step, and saves the updated document on its local
+ database.
+ The document is then replicated back to node A.
+ Node A decides that node B is the winner of the step and saves the document
+ to its local database.
+ The document is replicated back to Node B.
+ Node B sees that it is the winner of the claim, updates the document, with
+ information about which process is executing the step etc, saves the document
+ to its local database, and then starts executing the job step.
+ The document is replicated back to node A.
+ When node B is finished executing the job step, it updates the document
+ and saves it to its local database, and the document is replicated to node
+ A.
+ The total number of updates to the document for one step was four.
+ And the document was replicated five times.
+\end_layout
+
+\begin_layout Standard
+The work manager handle failures.
+ A failure could be that the work manager for some reason was restarted,
+ along with all the workers.
+ As mentioned in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Job-document"
+
+\end_inset
+
+, the job document will be the only place where information about a job
+ is stored.
+ This means that the work manager always needs to check if the promises
+ made by the work manager still is true.
+ 
+\end_layout
+
+\begin_layout Standard
+If the node is the winner of a job step, the work manager checks if it really
+ has a booked worker for the step.
+ If it has not, the 
+\begin_inset Quotes eld
+\end_inset
+
+claimed_by
+\begin_inset Quotes erd
+\end_inset
+
+ made on the step will be set to null on the document, as well as the 
+\begin_inset Quotes eld
+\end_inset
+
+winner
+\begin_inset Quotes erd
+\end_inset
+
+ value, and then the document is saved to the database, making it possible
+ for nodes to claim the step.
+ 
+\end_layout
+
+\begin_layout Standard
+If the work manager sees that it is currently the executioner of a step,
+ by examine the 
+\begin_inset Quotes eld
+\end_inset
+
+executioner
+\begin_inset Quotes erd
+\end_inset
+
+ value, it checks if it really has a busy worker handling the step.
+ If not, it means that the worker that executed the step died for some reason.
+ The work manager will then, as with the booked worker failure, set the
+ 
+\begin_inset Quotes eld
+\end_inset
+
+claimed_by
+\begin_inset Quotes erd
+\end_inset
+
+ value and 
+\begin_inset Quotes eld
+\end_inset
+
+winner
+\begin_inset Quotes erd
+\end_inset
+
+ value to null, as well as the 
+\begin_inset Quotes eld
+\end_inset
+
+executioner
+\begin_inset Quotes erd
+\end_inset
+
+ value.
+ 
+\end_layout
+
+\begin_layout Standard
+Another type of failure is when the job step does not succeed.
+ The worker handling the step will send the result of the attempts to execute
+ the step to the work manager.
+ If the step did not succeed, the whole job is seen as a failure.
+ The work manager sets the 
+\begin_inset Quotes eld
+\end_inset
+
+step_status
+\begin_inset Quotes erd
+\end_inset
+
+ field in the document to the result received from the worker, then sets
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+job_status
+\begin_inset Quotes erd
+\end_inset
+
+ field to 
+\begin_inset Quotes eld
+\end_inset
+
+failed
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection
+Workers
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Workers"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A worker is a process which executes the job steps.
+ The worker will receive the job step to execute from the work manager,
+ and try to execute the command.
+ The command is a unix shell command stored in the 
+\begin_inset Quotes eld
+\end_inset
+
+do
+\begin_inset Quotes erd
+\end_inset
+
+ field of the job step.
+ If the command succeeds, a succeed message is sent to the work manager.
+ If the command fails, the worker will check if it should retry the command,
+ and how many times it should retry the command, how long it should wait
+ between retries, and if it should try to do some alternative command if
+ all retries fail.
+ This information is stored it the job steps 
+\begin_inset Quotes eld
+\end_inset
+
+retry_strategy
+\begin_inset Quotes erd
+\end_inset
+
+ field.
+ If none of the retries succeed, the worker will send the result status
+ of the command as well as the result status of the alternative command,
+ if any.
+\end_layout
+
+\begin_layout Subsection
+Practical job distribution design.
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Practical-job-distribution"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The design described in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:The-different-processes/The"
+
+\end_inset
+
+ is not practical in a larger node system.
+ Depending on the node replication setup, the number of replications can
+ be very costly.
+ If all nodes replicate each other, the number of replications per update
+ to a document is, in the worst cases, approximately 
+\begin_inset Formula $(N-1)^{2}$
+\end_inset
+
+, where 
+\begin_inset Formula $N$
+\end_inset
+
+ is the the total number of nodes.
+ If the job step can be claimed by all nodes, the number of times the document
+ will be updated is four times(see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Work-manager"
+
+\end_inset
+
+), giving a total of 
+\begin_inset Formula $4*(N-1)^{2}$
+\end_inset
+
+ replications per job step.
+ Clearly the job distributer is just not scalable in that type of setup.
+ 
+\end_layout
+
+\begin_layout Standard
+To make the design more scalable, the number of replications must be reduced
+ drastically.
+ One solution is to let one node be the only node where jobs can be created,
+ and let all other nodes only replicate that node.
+ .This would drastically reduce the number of replications.
+\end_layout
+
+\begin_layout Standard
+Another action to reduce the number of replications is to use a replication
+ filter.
+ This filter should make sure that only affected nodes receives a replicated
+ document
+\end_layout
+
+\begin_layout Standard
+Another weakness in the design is fault tolerance.
+ If the job creator nodes CouchDB server fails for some reason, the job
+ is stalled until the server is restored.
+ A solution to this could be to have multiple CouchDB instances per node,
+ so that when a CouchDB server fails, another server will take over.
+ If there is only one node that is the job creator, as suggested above,
+ only this node needs to have several instances.
+\end_layout
+
+\begin_layout Section
+Implementation
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Implementation"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+I implemented all the functionality in Erlang
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Erlang"
+
+\end_inset
+
+.
+ I choose Erlang because of Erlangs process handling and message passing
+ system.
+ With Erlang, implementing the design was pretty straight forward.
+ 
+\end_layout
+
+\begin_layout Standard
+To be able to communicate with a CouchDB server from within Erlang, I used
+ a erlang/otp application called 
+\begin_inset Quotes eld
+\end_inset
+
+couchbeam
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "couchbeam"
+
+\end_inset
+
+, which is an application that lets me set up a continuous changes stream
+ from within an erlang process as well as retrieve and save documents.
+\end_layout
+
+\begin_layout Subsection
+A first approach
+\end_layout
+
+\begin_layout Standard
+In order to make the system as concurrent as possible, and spread out the
+ points of failures, I decided to separate as much functionality as possible
+ into separate processes.
+ 
+\end_layout
+
+\begin_layout Standard
+As a first approach to implement the design, I created four types of processes.
+ A supervisor process, a listener process, a work manager process and a
+ worker process.
+ 
+\end_layout
+
+\begin_layout Standard
+The supervisor process, called listener_sup, is the process used to start
+ up the whole system.
+ When listener_sup is started, it creates one listener process and one work
+ manager process.
+ The listener process is given the process identifier, pid, of the work
+ manager so that it can send changes messages to the work manager, as well
+ as needed information about the CouchDB instance (The host address to the
+ local CouchDB instance, as well as the database name) and the work manager
+ process is given needed information about the CouchDB instance, and the
+ number of workers it should create.
+ 
+\end_layout
+
+\begin_layout Standard
+When listener_sup creates the listener and the work manager, it creates
+ a link to them, so that it will receive a message form them if they crash.
+ Upon a crash, the listener_sup simply restarts the failed process.
+\end_layout
+
+\begin_layout Standard
+The listener process, upon creation, creates a continuous changes stream
+ towards a CouchDB database and then waits for messages from the change
+ stream.
+ Upon receiving a change(see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Changes."
+
+\end_inset
+
+) the listener just forwards the message to work manager process, and then
+ awaits the next change.
+\end_layout
+
+\begin_layout Standard
+The work manager process, upon creation, creates a fixed number of worker
+ processes, and saves their pid and status in a list.
+ The work manager is the supervisor process of the workers, and, just like
+ the listener_sup process, restarts workers that crashed.
+ The work manager waits for messages from the listener and the workers.
+ Upon receiving messages, it handles the messages as described in section
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Work-manager"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+The worker processes, upon creation, starts a receiver loop, awaiting messages
+ from the work manager.
+ When it receives a message, it creates an external process using the built
+ in function 
+\begin_inset Quotes eld
+\end_inset
+
+open_port
+\begin_inset Quotes erd
+\end_inset
+
+, and gives the external process the shell command contained in the message
+ from the work manager.
+ It then awaits the result from the external process, which is the integer
+ 0 if the command succeeded, and not 0 if the command failed.
+ The worker will act on the message from the external process as described
+ in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Work-manager"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The implementation seemed to work, at first.
+ But I missed one very important characteristic in the design about CouchDB
+ changes API.
+ Only when a document is actually is changed, may that be saved or deleted,
+ will the listener receive information about the document.
+ This is all good and well if the work manager always can handle a document.
+ But if the work manager has no free workers, it simply ignores the document,
+ and if this is the case on all nodes, the document will be 
+\begin_inset Quotes eld
+\end_inset
+
+forgotten
+\begin_inset Quotes erd
+\end_inset
+
+.
+ One approach to solve this could be for the work manager to always save
+ the document, even though no changes was made to the document, i.e there
+ was no claim or no execution of the step etc.
+ This approach, however would lead to unnecessary updates of a document,
+ since an update to a document actually is a new revision of the document
+ and the old version is kept(see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Document-Revisions."
+
+\end_inset
+
+), and each node that does not have free workers will re-save documents,
+ possible the same documents.
+ Each update is replicated throughout the system, and if the update does
+ not contain any new information, the network communication space is wasted.
+ So I needed a way to minimize the updates on documents for the sole purpose
+ to keep them alive.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement th
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/simonunge/Downloads/Processlayout.jpg
+	scale 50
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Process layout
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "Process layout"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+A second, better, approach.
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:A-second,-better,"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In my second approach, the listener_sup, listener, work manager and worker
+ processes are unchanged.
+ I just added one more process, a 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+ process.
+ This process is created and monitored by the listener_sup process.
+\end_layout
+
+\begin_layout Standard
+This process uses CouchDBs view functionality (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Views"
+
+\end_inset
+
+) to periodically retrieve all unclaimed jobs on the nodes local database
+ that the node was the creator of, and then re-saves them, one by one.
+ This way, the work manager will not be responsible for keeping document
+ alive, and documents are only kept alive by their creator node.
+ 
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Process layout"
+
+\end_inset
+
+ shows how the final process layout looks like.
+\end_layout
+
+\begin_layout Section
+Evaluation
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Evaluation"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+To evaluate the implementation, I have set up a network containing one to
+ three nodes, on two different computers but with in the same local network.
+ The nodes all replicate each other.
+ Each node will have 2 workers.
+ The computer with one node is in all test the node where I create the jobs,
+ and is thus the creator of the job, which is an important property since
+ this will be the node that decides a winner when the nodes makes claims
+ on steps (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Work-manager"
+
+\end_inset
+
+).
+ The 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+ process (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:A-second,-better,"
+
+\end_inset
+
+) will check for forgotten documents every five second, if nothing else
+ is said.
+\end_layout
+
+\begin_layout Standard
+The job documents contains three steps each, and each step is a five second
+ sleep command.
+ This means each job would, at best, take fifteen seconds the execute.
+ 
+\end_layout
+
+\begin_layout Standard
+The way the work manager is implemented, each step will in the best cases,
+ when there is always free workers available, result in two updates to a
+ document for steps with a specific target, and four updates to steps with
+ unspecified target (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Job-document"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Work-manager"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+When there are specific targets, the work manager first saves the document
+ before executing a step, and after executing a step.
+ 
+\end_layout
+
+\begin_layout Standard
+When there is no specific target, the work manager first saves the document
+ in an attempt to claim the step, the a work manager (on the node where
+ the job was created) saves the document when selecting winner.
+ After that, a work manager saves the document before executing a step,
+ and after executing a step.
+ 
+\end_layout
+
+\begin_layout Standard
+Each test evaluation is based on the time taken for a number of jobs to
+ be executed, and the number of revisions that was needed before the job
+ finished (There are, probably, more replications done than the revision
+ value shows.
+ The revision value only shows accepted revisions, not the rejected ones
+ due to conflicts).
+\end_layout
+
+\begin_layout Subsection
+Test 1: 3 nodes, 2 workers each, 1 job, no specific target.
+\end_layout
+
+\begin_layout Standard
+In this test, I used three nodes on two computers.
+ Each node is allowed to execute the job steps.
+ There is just one job, and the time taken for this job would, if there
+ is no cost for replication etc, be 15 seconds.
+\end_layout
+
+\begin_layout Itemize
+Execution time: 15 seconds (15 seconds)
+\end_layout
+
+\begin_layout Itemize
+Revisions: Min: 12, Max: 12
+\end_layout
+
+\begin_layout Standard
+The result shows that the time taken is 15 seconds, and that the total updates
+ made to the document is 12, 4 updates per step.
+ The result reflects the best case for this type of job.
+ This is not surprising, since even though three nodes were involved, only
+ one node actually did the work.
+ The creator node.
+ The reason for this is that the creator node is always the first one to
+ see the changes made to the document, the other nodes will have to wait
+ for the changes to be replicated throughout the network, and thus will
+ always be the node that claims steps first.
+ This leads to the creator nodes claiming the first step, winning the first
+ step, performs the first step, claiming the second step, winning the second
+ step and so forth.
+ Since the steps are executed in strict order, only one worker is used by
+ the creator node, meaning that there was never a lack of workers, and the
+ 
+\begin_inset Quotes eld
+\end_inset
+
+keep alive process
+\begin_inset Quotes erd
+\end_inset
+
+ did not have to do anything.
+\end_layout
+
+\begin_layout Subsection
+Test 2: 1-3 nodes, 2 workers each, 6 jobs, no specific target.
+\end_layout
+
+\begin_layout Standard
+In the second test, I measure the time it takes for one node to perform
+ 6 jobs, then the same amount of jobs on 2 nodes, and finally on 3 nodes.
+ I have a 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+ process that re-saves forgotten documents every five second.
+ I then redo the tests with the 
+\begin_inset Quotes eld
+\end_inset
+
+keep alive process
+\begin_inset Quotes erd
+\end_inset
+
+ set to re-save forgotten document every 1 second.
+ After the execution time, inside the parenthesis, is the optimal execution
+ time
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+The optimal execution time is based on how long 1 job should take, which
+ is 15 seconds, times how many jobs there are in total, divided in the total
+ number of workers available: 
+\begin_inset Formula $\frac{15*jobs}{workers}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+, when there is no cost for replication, network delays etc.
+\end_layout
+
+\begin_layout Paragraph
+1-3 nodes, 5 seconds 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Subparagraph
+1 node:
+\end_layout
+
+\begin_layout Itemize
+Execution time: 51 seconds (45 seconds)
+\end_layout
+
+\begin_layout Itemize
+Revisions: Min: 12, Max: 20
+\end_layout
+
+\begin_layout Subparagraph
+2 nodes:
+\end_layout
+
+\begin_layout Itemize
+Execution time: 31 seconds (22.5 seconds)
+\end_layout
+
+\begin_layout Itemize
+Revisions: Min: 12, Max: 16
+\end_layout
+
+\begin_layout Subparagraph
+3 nodes:
+\end_layout
+
+\begin_layout Itemize
+Execution time: 17 seconds (15 seconds)
+\end_layout
+
+\begin_layout Itemize
+Revisions: Min: 12, max: 13
+\end_layout
+
+\begin_layout Paragraph
+1-3 nodes, 1 second 
+\begin_inset Quotes eld
+\end_inset
+
+keep doc alive
+\begin_inset Quotes erd
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Subparagraph
+1 node:
+\end_layout
+
+\begin_layout Itemize
+Execution time: 46 seconds (45 seconds)
+\end_layout
+
+\begin_layout Itemize
+Revisions: Min: 12, Max 41
+\end_layout
+
+\begin_layout Subparagraph
+2 nodes:
+\end_layout
+
+\begin_layout Itemize
+Execution time: 31 seconds (22.5 seconds)
+\end_layout
+
+\begin_layout Itemize
+Revisions: Min: 12, Max: 28
+\end_layout
+
+\begin_layout Subparagraph
+3 nodes:
+\end_layout
+
+\begin_layout Itemize
+Execution time: 17 seconds (15 seconds)
+\end_layout
+
+\begin_layout Itemize
+Revisions: Min: 12, Max: 13
+\end_layout
+
+\begin_layout Standard
+The above test shows that adding more nodes will give a performance boost
+ (This is only true up to an extent.
+ If there are more nodes and thus workers than available steps to execute,
+ there will not be any gain on adding more nodes.).
+ Comparing the results from the tests from the 5 second 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+ and 1 second 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+ shows that lowering the time the 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+ process waits between updates will give a better execution time, but a
+ higher revision number due to all the re-saves of documents and each time
+ a document is re-saved, it will be replicated to all nodes resulting in
+ more network strain.
+\end_layout
+
+\begin_layout Subsection
+Test 3, 2 nodes, 2 workers each, 3 jobs, specific targets.
+\end_layout
+
+\begin_layout Standard
+In this test I want test that the system can handle specific targets for
+ the job steps.
+ The test consists of 3 identical jobs.
+ The first step of each job is to be executed on node A, the second on node
+ B, and the third on node A again.
+ The nodes are located on separated computers, and each has two workers.
+ The 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+ re-saves documents every five second.
+ 
+\end_layout
+
+\begin_layout Standard
+The best possible execution time, presented in the parenthesis next to the
+ test execution time, is the time it would take if there is no replication
+ or network communication costs.
+ Since each job consists of 3 steps, and each step has a target, in the
+ best case a document would only be updated 2 times per step (see section
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Evaluation"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Itemize
+Execution time: 23 seconds (20 seconds)
+\end_layout
+
+\begin_layout Itemize
+Revisions: Min 6, Max 8
+\end_layout
+
+\begin_layout Standard
+In almost all of the above tests, the execution time is higher than the
+ best possible execution time.
+ The main factor for this is, in my opinion, not due to the fact that replicatio
+ns between nodes takes time but based on the time between the re-saves of
+ the forgotten documents.
+\end_layout
+
+\begin_layout Subsection
+Test 4, 3 nodes, 2 workers each, 90 jobs, no specific targets.
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Test-4,-3"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+I wanted to test how well the system could handle a lot of jobs on the same
+ time.
+ So I created 90 jobs, at the same time, and started up the system.
+ The system did handle all the jobs, but my listener process crashed several
+ times during the test.
+ The crashes seems to be caused by some functionally in couchbeam(see section
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Implementation"
+
+\end_inset
+
+) when too many changes are sent from CouchDB to the listener.
+ The test was still a success in some way, because of the my listener_sup
+ process who restarted the listener each time if crashed.
+ 
+\end_layout
+
+\begin_layout Itemize
+Execution time: 3 minutes, 45 seconds (4 minutes, 30 seconds)
+\end_layout
+
+\begin_layout Section
+Conclusion and future work
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Conclusion"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+conclusion
+\end_layout
+
+\begin_layout Standard
+The goal of this thesis was to see if CouchDB could be used as the backbone
+ in a job distributer, and in short, my conclusion is yes, it can.
+ 
+\end_layout
+
+\begin_layout Standard
+CouchDB takes care of most of the more difficult issues when working in
+ a distributed environment.
+ Thanks to its replication mechanism it is easy to synchronize databases,
+ and you will have the guarantee that each node will, eventually, have the
+ latest version of a job document.
+ 
+\end_layout
+
+\begin_layout Standard
+CouchDBs Multi version Concurrency Control(MVCC) ensures high availability,
+ so that each node can always make reads to the database without the need
+ to wait for the a write to be executed.
+ A feature I took advantage of when having several processes working against
+ a local database; I did not need to figure out when it was safe to make
+ a read.
+ It always is.
+\end_layout
+
+\begin_layout Standard
+CouchDBs RESTful interface makes it easy for the programmer to communicate
+ with the database from any programming language.
+\end_layout
+
+\begin_layout Standard
+The JSON document structure that CouchDB uses makes it easy to alter the
+ job document, adding and removing fields as one sees fit for ones application.
+ CouchDB does not mind, it just replicates without questions.
+\end_layout
+
+\begin_layout Standard
+With all of the above headaches taken care of, the programmer can concentrate
+ on the actual job distributer.
+\end_layout
+
+\begin_layout Standard
+The job distributer I developed successfully shows that it is possible to
+ scale with CouchDB .
+ Just add another node, set up replication and start the job distributer,
+ and that node will start to claim job steps to ease the burden on the other
+ nodes.
+ Note that in the current design, the scalability is up for debate, as seen
+ section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Practical-job-distribution"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+In the code that I wrote, the job distributer can only handle shell commands.
+ This, however is just a limitation in my job distributer, and not CouchDB.
+ CouchDB is just a the reliable messenger, what you want in the messages
+ or how you want to handle the content is up the programmer.
+\end_layout
+
+\begin_layout Standard
+One of the biggest downsides of CouchDB is that since it uses MVCC, all
+ old versions of documents are saved, which can lead to the databases growing
+ rather large if not taken care of.
+\end_layout
+
+\begin_layout Subsection
+Future work
+\end_layout
+
+\begin_layout Standard
+There are several areas where the job distributer could be improved.
+ The most important thing to improve is to make sure the job distributer
+ can handle a lot of database changes arriving at the same time without
+ failing.
+ As seen in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Test-4,-3"
+
+\end_inset
+
+, currently the job distributer can not handle too many changes arriving
+ at the same time.
+\end_layout
+
+\begin_layout Standard
+The job distributer can only handle unix shell commands.
+ Adding different kinds of job action to perform would be useful, and quite
+ easy.
+ In each job step, an additional field can be added which identifies what
+ kind of job it is, be it a shell command or a RESTful command etc, and
+ the worker process will act accordingly.
+\end_layout
+
+\begin_layout Standard
+Adding better failure handling.
+ In the current implementation, the failure handling for job steps is very
+ black or white, a step is successful or it is not and the job is aborted.
+ When only shell commands are used, this kind failure handling could be
+ enough.
+ But if one extends the type of jobs the to include RESTful commands as
+ well, the job distributer should be able to react differently on different
+ kinds of HTTP status codes.
+\end_layout
+
+\begin_layout Standard
+Adding job priorities.
+ As it is now, all jobs have the same priority.
+ There could be that some jobs are more important than other, and that these
+ jobs should be performed before jobs with less priority.
+ When there are sufficient workers to handle all jobs concurrently, this
+ is not a problem, but when there are no free workers available, it could
+ come in use to have priorities.
+ The priorities could just be a integer value in each job document, and
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+ processes could then use that value to decide in which order it should
+ re-save documents.
+\end_layout
+
+\begin_layout Standard
+In contrast to the problem description, let some job steps be performed
+ on multi nodes.
+ In my design, I wanted to guarantee that a job step is only performed once,
+ but there should be possible to have the option to create jobs with steps
+ that should be performed on multiple nodes.
+\end_layout
+
+\begin_layout Standard
+Minimize the amount of replications.
+ Each time a job document is changed and saved, it will be replicated throughout
+ the system.
+ But there are situations when not all nodes needs to get the updated document.
+ When, for example, there is a specific target for a job step, there is
+ no need for unaffected nodes to get the document replicated to its local
+ database.
+ Another example is when a node claims a step.
+ The only node who is interested in the claim is the node that will select
+ the winning node.
+ To solve this, some kind of filters should be implemented, making sure
+ no unnecessary replication is made.
+\end_layout
+
+\begin_layout Standard
+Control the job distributer.
+ In its current state, it is not possible to control the job distributer
+ after it has been started.
+ If you want to add or remove workers, you need to restart the job distributer.
+ It should be possible to control the job distributer during run time, through
+ a RESTful interface for example; adding and removing workers; change the
+ wait time for the 
+\begin_inset Quotes eld
+\end_inset
+
+keep docs alive
+\begin_inset Quotes erd
+\end_inset
+
+ process; change the database; get information about memory and CPU usage
+ etc.
+ 
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "CouchDB-Book"
+
+\end_inset
+
+Anderson, J., Lehnardt, J.
+ & Slater, N.
+ (2010) 
+\emph on
+CouchDB: The Definitive Guide,
+\emph default
+ O'Reilly Press
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "couchbeam"
+
+\end_inset
+
+Chesneau, B.
+ (2011)
+\emph on
+ Couchbeam, 
+\emph default
+
+\begin_inset Newline newline
+\end_inset
+
+http://benoitc.github.com/couchbeam, Accessed 2011-06-15
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "RESTful"
+
+\end_inset
+
+Fielding, R.
+ (2000) 
+\emph on
+Architectural Styles and the Design of Network-based Software Architectures,
+\emph default
+ chapter 5
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "CAP"
+
+\end_inset
+
+Gilbert, S., Lynch, N.
+ (2002) 
+\emph on
+Brewer's conjecture and the feasibility of consistent, available, partition-tole
+rant Web services
+\emph default
+.
+ ACM SIGACT News 33(2)
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "Apress-couchDB"
+
+\end_inset
+
+Lennon, J.
+ (2009) 
+\emph on
+Beginning CouchDB, 
+\emph default
+Apress
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "Consistency"
+
+\end_inset
+
+Kshemkalyani, A.
+ and Singhal, B.
+ (2008)
+\emph on
+ Distributed Computing Principles, Algorithms, and Systems
+\emph default
+, Cambridge University Press
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "Verner Eventual Consistency"
+
+\end_inset
+
+Vogels, W
+\emph on
+.
+ 
+\emph default
+(2008)
+\emph on
+ Eventually Consistent - Revisited
+\emph default
+, 
+\begin_inset Newline newline
+\end_inset
+
+http://www.allthingsdistributed.com/2008/12/eventually_consistent.html, Accessed
+ 2011-06-15
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "Curl"
+
+\end_inset
+
+Curl, http://curl.haxx.se/, Accessed 2011-06-15
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "Erlang"
+
+\end_inset
+
+Erlang Programming Language, http://www.erlang.org, Accessed 2011-06-15
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "JSON-RFC"
+
+\end_inset
+
+JSON-RFC, http://tools.ietf.org/html/rfc4627, Accessed 2011-06-15
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "MD5"
+
+\end_inset
+
+MD5-RFC, http://tools.ietf.org/html/rfc1321, Accessed 2011-06-15
+\end_layout
+
+\begin_layout Bibliography
+\labelwidthstring References
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "URI"
+
+\end_inset
+
+URI-RFC, http://tools.ietf.org/html/rfc3986, Accessed 2011-06-15
+\end_layout
+
+\end_body
+\end_document
